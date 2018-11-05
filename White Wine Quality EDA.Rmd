@@ -1,0 +1,523 @@
+---
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+chooseCRANmirror(graphics=FALSE, ind=1)
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Title: Wine Quality Exploration by Wilson Lo
+
+## Preparation Before Doing EDA
+
+1. Prepare the required packages
+```{r echo=FALSE, message=FALSE, warning=FALSE, packages}
+install.packages("gridExtra", dependencies = T)
+install.packages("ggplot2", dependencies = T) 
+install.packages("knitr", dependencies = T)
+install.packages("dplyr", dependencies = T)
+install.packages('GGally', dependencies = T)
+install.packages('scales', dependencies = T)
+install.packages('memisc', dependencies = T)
+install.packages('lattice', dependencies = T)
+install.packages('MASS', dependencies = T)
+install.packages('car', dependencies = T)
+install.packages('reshape', dependencies = T)
+install.packages('plyr', dependencies = T)
+install.packages("corrgram", dependencies = T)
+library("gridExtra")
+library("ggplot2") 
+library("knitr")
+library("dplyr")
+library('GGally')
+library('scales')
+library('memisc')
+library('lattice')
+library('MASS')
+library('car')
+library('reshape')
+library('plyr')
+library('corrgram')
+```
+
+2. Load the CSV file
+Created by: Paulo Cortez (Univ. Minho), Antonio Cerdeira, Fernando Almeida, Telmo Matos and Jose Reis (CVRVV) @ 2009
+```{r echo=FALSE, Load_the_Data}
+#Load the CSV file
+wqw <- read.csv('wineQualityWhites.csv')
+```
+
+## Univariate Plots Selection
+Below are the statistic summary for the dataset
+```{r}
+names(wqw)
+```
+
+```{r}
+str(wqw)
+```
+
+```{r}
+summary(wqw)
+```
+
+Our dataset consists of 13 variables, with total 4,898 observations.
+
+```{r}
+#bar chart for quality
+ggplot(aes(x = quality), data = wqw) +
+       geom_bar()
+```
+
+```{r}
+#create a new variable for further investigation
+wqw$quality.factor <- factor(wqw$quality, ordered=TRUE)
+```
+
+The majority of white wine quality is at 5 and 6. And a new variable, **quality.factor** is created for further investigation.
+
+```{r}
+#bar chart for fixed acidity
+ggplot(aes(x = fixed.acidity), data = wqw) +
+       geom_bar()
+```
+
+```{r}
+#bar chart for fixed acidity, outliers is removed
+ggplot(aes(x = fixed.acidity), data = wqw, binwidth = 50) +
+       geom_bar() +
+       scale_x_continuous(breaks = seq(2, 12, 2)) +
+       coord_cartesian(xlim = c(2, 12))
+```
+
+```{r}
+#bar chart for volatile acidity
+ggplot(aes(x = volatile.acidity), data = wqw) +
+       geom_bar()
+```
+
+```{r}
+#bar chart for volatile acidity, outliers is removed
+ggplot(aes(x = volatile.acidity), data = wqw) +
+       geom_bar() +
+       scale_x_continuous(breaks = seq(0, 0.6, 0.1)) +
+       coord_cartesian(xlim = c(0, 0.6))
+```
+
+```{r}
+#bar chart for citric acid
+ggplot(aes(x = citric.acid), data = wqw) +
+       geom_bar()
+```
+
+```{r}
+#bar chart for citric acid, outliers is removed
+ggplot(aes(x = citric.acid), data = wqw) +
+       geom_bar() +
+       scale_x_continuous(breaks = seq(0, 0.8, 0.2)) +
+       coord_cartesian(xlim = c(0, 0.8))
+```
+
+Fixed acidity, volatile acidity and citric acid are all related to acid and therefore their graphs look alike. After removing the outliers, all three graphs how a quite normal distribution, as from the summary of the dataset, the median is very close to the mean for all the three variables.
+
+```{r}
+#bar chart for residual sugar
+ggplot(aes(x = residual.sugar), data = wqw) +
+       geom_bar()
+```
+
+```{r}
+#bar chart for residual sugar, using logscale to transform
+ggplot(aes(x = residual.sugar), data = wqw) +
+       geom_bar() +
+       scale_x_log10() +
+       coord_cartesian(xlim = c(0.1, 30))
+```
+
+The original distribution of residual sugar is heavily skewed to the left. After transforming the x-axis using logscale, it appears a bimodal distribution.
+
+```{r}
+#bar chart for chlorides
+ggplot(aes(x = chlorides), data = wqw) +
+       geom_bar()
+```
+
+```{r}
+#bar chart for chlorides, outlier is removed
+ggplot(aes(x = chlorides), data = wqw) +
+       geom_bar() +
+       scale_x_continuous(breaks = seq(0, 0.1, 0.01)) +
+       coord_cartesian(xlim = c(0, 0.1))
+```
+
+After removing the outlier of chlorides, we can see a normal distribution, as from the summary of the dataset, the median is very close to the mean.
+
+```{r}
+#bar chart for free sulfur dioxide
+ggplot(aes(x = free.sulfur.dioxide), data = wqw) +
+       geom_bar()
+```
+
+```{r}
+#bar chart for free sulfur dioxide, outlier is removed
+ggplot(aes(x = free.sulfur.dioxide), data = wqw) +
+       geom_bar() +
+       scale_x_continuous(breaks = seq(0, 90, 10)) +
+       coord_cartesian(xlim = c(0, 90))
+```
+
+```{r}
+#bar chart for total sulfur dioxide
+ggplot(aes(x = total.sulfur.dioxide), data = wqw) +
+       geom_bar()
+```
+
+```{r}
+#bar chart for total sulfur dioxide, outlier is removed
+ggplot(aes(x = total.sulfur.dioxide), data = wqw) +
+       geom_bar() +
+       scale_x_continuous(breaks = seq(0, 300, 20)) +
+       coord_cartesian(xlim = c(0, 300))
+```
+
+It is found that the distribution of free and total sulfur dioxide is very similar, both have a quite normal distribution after removing outlier. But the amount of free sulfur dioxide in all white wines is relatively constant.
+
+```{r}
+#bar chart for density
+ggplot(aes(x = density), data = wqw) +
+       geom_bar()
+```
+
+```{r}
+#bar chart for density, bins of small values are combined to have a better visualisation
+cut_density <- cut(wqw$density, breaks = 100, labels=1:100)
+ggplot(aes(x = cut_density), data = wqw) +
+       geom_bar()
+```
+
+There is only a very narrow range of density for the white wines, approximately from 0.098 to 1.04. As there are many different value with small difference for density, we have cut all the values evenly into 100 groups, in order to have a better visualisation. 
+
+```{r}
+#bar chart for pH
+ggplot(aes(x = pH), data = wqw) +
+       geom_bar()
+```
+
+pH shows a normal distribution, with values concentrated from 3 to 3.3.
+```{r}
+#bar chart for sulphates
+ggplot(aes(x = sulphates), data = wqw) +
+       geom_bar()
+```
+
+```{r}
+#bar chart for sulphates, outlier is removed
+ggplot(aes(x = sulphates), data = wqw) +
+       geom_bar() +
+       scale_x_continuous(breaks = seq(0.2, 0.8, 0.1)) +
+       coord_cartesian(xlim = c(0.2, 0.8))
+```
+
+The distribution is quite normal after removing the outlier. And it is quite similar to that of free sulfur dioxide and total sulfur dioxide. The relationship between these three variables will be checked in later section of this project.
+
+```{r}
+#bar chart for alcohol
+ggplot(aes(x = alcohol), data = wqw) +
+       geom_bar() +
+       scale_x_continuous(breaks = seq(8, 14.2, 1))
+```
+
+The distribut of alcohol is alightly right skewed, and is concentrated from 9 to 11.
+
+## Univariate Analysis
+
+### What is the structure of your dataset?
+The data set contains 4,898 white wines with 11 variables on quantifying the chemical properties of each wine. The 11 variables are fixed.acidity, volatile.acidity, citric.acid, residual.sugar, chlorides, free.sulfur.dioxide, total.sulfur.dioxide, density, pH, sulpahates and alcohol. All the 11 variables are numberic.
+
+At least 3 wine experts rated the quality of each wine, providing a rating between 0 (very bad) and 10 (very excellent). The quality of white wine is in integers.
+
+### What is/are the main feature(s) of interest in your dataset?
+The main feature of interest in the dataset is **quality**. This project is to explore which chemical properties influence the quality of white wines. 
+
+### What other features in the dataset do you think will help support your investigation into your feature(s) of interest?
+Alcohol, volitaile acid, free sulfur dioxide and total sulfur dioxide seems to affect the quality of white wines the most, according to the documentation. The relationship of them will be explored in the following section.
+
+### Did you create any new variables from existing variables in the dataset?
+A new variable, **quality.factor** is created. It is a ordered factor which will be more useful for further investigation.
+
+### Of the features you investigated, were there any unusual distributions? Did you perform any operations on the data to tidy, adjust, or change the form of the data? If so, why did you do this?
+There are no missing values in the dataset.
+
+For alcohol, the distribution is a bit right skewed. It is not adjusted as the skewness is not not extreme.
+
+For residual sugar, the distribution is heavily right skewed. After transforming with logscale, it shows a bimodal distribution, with two peaks.
+
+For the rest of the variables, there are many outliers. After removing the outliers, they all show a distribution similar to normal distribution. So it is not needed to perform any other transformation and adjustment.
+
+
+## Bivariate Plots Selection
+
+Below correlation table has shown all the correlations between each variable.
+
+```{r}
+corrgram(wqw, order=TRUE,
+         upper.panel=panel.cor, main="Correlation Between Chemical Properties in White Wine")
+```
+
+### Chemical properties that contribute most to the quality of white wine is shown below.
+
+```{r}
+ggplot(aes(x = quality, y = alcohol), data = wqw) + 
+       geom_boxplot(aes(color=quality.factor))
+```
+
+Alcohol has the highest correlation with quality (0.44). As shown above, white wines with quality 7, 8 and 9 have higher median alcohol level at 11% or above. 
+
+```{r}
+ggplot(aes(x = quality, y = density), data = wqw) + 
+       geom_boxplot(aes(color=quality.factor)) +
+       coord_cartesian(ylim = c(0.98, 1.01))
+```
+
+Density has the second highest correlationwith quality, but in opposite direction. As shown above, median density tend to decrease as quality of white wine increases.
+
+### As alcohol and densityaffect most to the quality, a deeper exploration into both of them is done below
+```{r}
+ggplot(aes(x = density, y = alcohol), data = wqw) + 
+       geom_point(alpha = 1/5, position = 'jitter') + 
+       coord_cartesian(xlim = c(0.98, 1.01))
+```
+
+Density has the highest correlation with alcohol, but in opposite direction. As shown above, it shows a clear negative correlation.
+
+```{r}
+g1 <- ggplot(aes(x = density, y = residual.sugar), data = wqw) + 
+          geom_point(alpha = 1/5, position = "jitter") + 
+          coord_cartesian(xlim = c(0.98, 1.01), ylim = c(0,30)) +
+          geom_smooth()
+
+g2 <- ggplot(aes(x = density, y = total.sulfur.dioxide), data = wqw) + 
+          geom_point(alpha = 1/5, position = "jitter")+ 
+          coord_cartesian(xlim = c(0.98, 1.01)) +
+          geom_smooth()
+
+grid.arrange(g1,g2, ncol=2)
+```
+
+To further explore, we could see the positive correlation between density versus residual sugar and total sulfur dioxide.
+
+```{r}
+g1 <- ggplot(aes(x = alcohol, y = residual.sugar), data = wqw) + 
+          geom_point(alpha = 1/5, position = 'jitter') +
+          coord_cartesian(ylim = c(0, 30)) +
+          geom_smooth()
+
+g2 <- ggplot(aes(x = alcohol, y = total.sulfur.dioxide), data = wqw) + 
+          geom_point(alpha = 1/5, position = 'jitter') +
+          coord_cartesian(ylim = c(0, 350)) +
+          geom_smooth()
+
+grid.arrange(g1,g2, ncol=2)
+```
+
+To further explore, we could see the negative correlation between alcohol versus residual sugar and total sulfur dioxide.
+
+```{r}
+ggplot(aes(x = free.sulfur.dioxide, y = total.sulfur.dioxide), data = wqw) + 
+          geom_point(alpha = 1/5, position = 'jitter') +
+          coord_cartesian(xlim = c(0, 100), ylim = c(0, 300)) +
+          geom_smooth()
+```
+
+From the above scatterplot, there is a positive correlation between free sulfur dioxide and total sulfur dioxide.
+
+
+## Bivariate Analysis
+
+### Talk about some of the relationships you observed in this part of the investigation. How did the feature(s) of interest vary with other features in the dataset?
+
+In this part, the correlation between quality and all chemical properties are found.
+alcohol (0.44)
+density (-0.31)
+chlorides (-0.21)
+volatile.acidity (-0.19)
+total.sulfur.dioxide (-0.17)
+fixed.acidity (-0.11)
+residual.sugar (-0.10)
+pH (0.1)
+
+And the correlation of quality versus citric acid, sulphates and free sulfur dioxide is too small.
+
+From the graph quality vs alcohol, we can distinguish white wine by the alcohol level. If the alcohol level is approximately 11% or above, we can conclude that the white wine has a very large chance to have quality at 7, 8 or 9.
+
+### Did you observe any interesting relationships between the other features (not the main feature(s) of interest)?
+From above, as alcohol and density have high correlation with white wine quality, the correlation between alcohol and density is also explored.
+It shows a high negative correlation(-0.78) between the two. 
+
+And to further explore, both residual sugar and total sulfur dioxide also have high positive correlation with density, and have high negative correlation with alcohol. This also implies the negative correlation between alcohol and density is true.
+
+### What was the strongest relationship you found?
+For Quality:
+Alcohol : 0.44
+Density : -0.31
+
+For non quality pairs:
+Density vs Residual Sugar: 0.84
+Alcohol vs Density: -0.78
+
+
+## Multivariate Plots Section
+
+In this section, we try to explore more how to distinguish the white wine quality below 7, by exploring different chemical properties.
+
+```{r}
+ggplot(aes(x = density, y = alcohol), data = wqw) + 
+       geom_point(aes(color=quality.factor)) + 
+       coord_cartesian(xlim = c(0.98, 1.01)) +
+       facet_grid(~quality.factor) +
+       geom_abline(intercept = 10.4, slope = 0)
+```
+
+From the above graph, a line of alcohol level at 10.4% is drawn. We could be more clear that all white wine with quality 9 have alcohol level equal to 10.4% or above. And a large proportion of white wine with quality 8 has alcohol level above this line as well.
+
+```{r}
+ggplot(aes(x=alcohol,y=chlorides, colour=quality.factor), data = wqw) +
+       stat_smooth(method = loess)
+```
+
+From the above graph, we could find out that good quality white wine are with lowest level of chlorides and with alcohol level higher than 10.4%. 
+Whereas that with higher level of chlorides and with alcohol level lower than 10.4% are most likely to be of bad quality.
+
+```{r}
+ggplot(aes(x=alcohol, y=chlorides, color = quality.factor), data = wqw) + 
+       geom_point() + 
+       facet_wrap(~quality.factor) + 
+       geom_smooth(colour='black')
+```
+
+Chlorides level above 0.15g/dm^3 are very likely to have white wine quality 5 and 6.
+
+```{r}
+ggplot(aes(x=fixed.acidity,y=volatile.acidity, colour=quality.factor), data = wqw) +
+  geom_point() +
+  geom_smooth(color = 'black') +
+  facet_wrap(~quality.factor)
+```
+
+From the above graph, we could see that white wines with good and bad quality(3, 7, 8, 9) usually have volatile acidity below 0.6g/dm^3.
+In other words, volatile acidity above 0.6g/dm^3 are likely to have quality at 4, 5 and 6.
+But actually there is no clear relationship between fixed acidity or volatile acidity versus quality of white wine.
+
+```{r}
+ggplot(aes(x=alcohol,y=residual.sugar, colour=quality.factor), data = wqw) +
+  geom_point() +
+  coord_cartesian(ylim = c(0, 30)) +
+  geom_smooth(color = 'black') +
+  facet_wrap(~quality.factor)
+```
+
+From above, it is found that if the residual sugar is more than 20g/dm^3, the quality of white wine must be 5 or 6.
+```{r}
+ggplot(aes(x=total.sulfur.dioxide,y=alcohol, colour=quality.factor), data = wqw) +
+       stat_smooth(method = loess)
+```
+
+From the above, if the level of total sulfur dioxide is high, it is more likely to be white wines with lower quality
+
+```{r}
+ggplot(aes(x=density,y=residual.sugar, colour=quality.factor), data = wqw) +
+       geom_point() +
+       coord_cartesian(xlim = c(0.985, 1.005)) +
+       facet_wrap(~quality.factor)
+```
+
+From the above, if the density is above 1.0025g/cm^3 or , the quality must be at 6.
+
+```{r}
+ggplot(aes(x=density,y=pH, colour=quality.factor), data = wqw) +
+       geom_point() +
+       coord_cartesian(xlim = c(0.985, 1.01)) +
+       facet_wrap(~quality.factor)
+```
+
+From the above, unfortunately there is no clear relationship between pH and quality of white wine.
+
+```{r}
+ggplot(aes(x = free.sulfur.dioxide, y = total.sulfur.dioxide, colour=quality.factor), data = wqw) + 
+          geom_point(alpha = 1/2) +
+          coord_cartesian(xlim = c(0, 100), ylim = c(0, 300))
+```
+
+With the same level of free sulfur dioxide, higher level of total sulfur dioxide would normally have lower quality.
+
+## Multivariate Analysis
+
+### Talk about some of the relationships you observed in this part of the investigation. Were there features that strengthened each other in terms of looking at your feature(s) of interest?
+From the above graphs, we try find out how to distinguish the quality of white wines using chemical properties other than alcohol.
+
+For density, the range is too narrow, which we could only distinguih the extreme density more than 1.0025g/cm^3 to be quality 6.
+
+For chlorides, good quiality white wines usually have the lowest level of chlorides, whereas bad quality ones usually hav highest level of chlorides.
+
+For residual sugar, only white wines with quality 5 and 6 would have residual sugar level more than 20g/dm^3.
+
+For total sulfur dioxide, those of higher level of total sulfur dioxide should have lower quality.
+
+### Were there any interesting or surprising interactions between features?
+For the correlation between free sulfur dioxide and total sulfur dioxide, it is determined from "Bivariate Analysis" that they have positive correlation. In this part, we further find out that if the white wine has the same level of free sulfur dioxide, that with a lower level of total sulfur dioxide tends to have higher quality. 
+
+## Final Plots and Summary
+
+### Plot One
+```{r}
+ggplot(aes(x = quality, y = alcohol), data = wqw) + 
+       geom_boxplot(aes(color=quality.factor)) +
+       ggtitle("Median Alcohol Level vs Quality")
+```
+
+### Description One
+This is the first graph that shows how to distinguish the quality of white wines.
+With a higher median alcohol level, the quality of white wine tends to be higher.
+In other words, high quality white wines usually have a higher percent of alcohol level.
+
+### Plot Two
+```{r}
+ggplot(aes(x=alcohol, y=chlorides, color = quality.factor), data = wqw) + 
+       geom_point() + 
+       facet_wrap(~quality.factor) + 
+       geom_smooth(colour='black') +
+       ggtitle("Chlorides vs Alcohol by Quality Factor")
+```
+
+### Description Two
+Good quality white wines tend to have lower level of chlorides(below 0.05g/dm^3) and alcohol level above 10.4%.
+If the chlorides level is very high(above 0.15g/dm^3), the quality of white wines are very likely to be at 5 or 6.
+
+### Plot Three
+```{r}
+ggplot(aes(x = free.sulfur.dioxide, y = total.sulfur.dioxide, colour=quality.factor), data = wqw) + 
+          geom_point(alpha = 1/2) +
+          coord_cartesian(xlim = c(0, 100), ylim = c(0, 300)) +
+          ggtitle("Total Sulfur Dioxide vs Free Sulfur Dioxide by Quality Factor")
+```
+
+### Description Three
+By perception and correlation table, the level of total sulfur dioxide dose not directly contribute to the quality of white wines.
+But it contributs much to the level of alcohol, with a negative correlation (-0.45).
+
+From the documentation, total sulfur dioxide is equal to the sum of free sulfur dioxide and bound sulfur dioxide.
+When we explore the above graph, it is found that with the same level of free sulfur dioxide, lower level of total sulfur dioxide tends to have a higher quality of white wine. It also implies that a lower free sulfur dioxide ratio in the white wine would usually have higher quality.
+
+## Reflection
+The data set contains 4,898 white wines with 11 variables on quantifying the chemical properties of each wine. At the beginning of this analysis, the distribution of all the 11 variables are plot, and almost all of them show a quite normal distribution after removing outliers. Only that of residual sugar shows a heavily right skewed distribution.
+
+It is found that alcohol has the highest correlation with quality (0.44). Then we have further explored on the relationship between different chemical properties. Alcohol is highly negatively correlated to density(-0.78). And density is positively correlated to residual sugar(0.84) and total sulfur dioxide(0.53). When we looked further into total sulfur dioxide, we found that a lower free sulfur dioxide ratio in the white wine would usually have higher quality.
+
+Among all the graphs we plot, we could distinguish between good and bad quality white wine using alcohol, chlorides and free sulfur dioxide ratio. Besides by looking at a certain level of chlorides and residual sugar, we could appoximately asertain that the quality is at normal level(around 5 and 6).
+
+To conclude, with current dataset, it is relatively easier to distinguish between good and bad quality when certain chemical properties is at an extreme level. But it is very difficult to distinguish white wine between normal and good/bad quality. It is because there are too many chemical properties in a bottle of white wine, which a little bit difference in some of the chemical properties may not affect the taste obviously.
+
+Imagine that if the dataset can include the year that produce the white wine, production country or even the name of the chateau, and increase the number of people to taste the white wine, there will be more information to determine the correlation and may be easier to distinguish between different quality of white wine.
